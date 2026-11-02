@@ -2,6 +2,8 @@
 
 Backend Firebase Functions + bot Telegram + dashboard statis.
 
+Panduan lengkap (tujuan, cara pakai, modul, dan pemasangan pin): `docs/Penjelasan-RINGGUARD.docx`.
+
 ## Struktur
 
 ```
