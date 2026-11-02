@@ -1,0 +1,11 @@
+{
+  "name": "ringguard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RingGuard - pemantau kualitas udara Ring 1 (dashboard + bot Telegram)",
+  "scripts": {
+    "bot": "node bot/local-bot.js",
+    "bot:demo": "node bot/local-bot.js --demo",
+    "bot:seed": "node bot/local-bot.js --seed"
+  }
+}

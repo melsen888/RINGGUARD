@@ -1,0 +1,16 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "nodes": {
+      "$node": {
+        "readings": {
+          ".read": true,
+          ".indexOn": ["ts"]
+        }
+      }
+    },
+    "reports": { ".indexOn": ["uid", "ts"] },
+    "alerts": { ".indexOn": ["ts"] }
+  }
+}

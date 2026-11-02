@@ -1,0 +1,14 @@
+# dependencies
+node_modules/
+functions/node_modules/
+
+# secret lokal: JANGAN pernah di-commit
+functions/.secret.local
+functions/.env
+functions/.env.*
+*.local
+
+# firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="id" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pantau Udara Ring 1</title>
+<!-- Jika web Anda sudah memakai Bootstrap 5, hapus dua <link> Bootstrap di bawah ini. -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  .r1{font-family:"Plus Jakarta Sans",system-ui,sans-serif;background:var(--bs-tertiary-bg);min-height:100vh}
+  .r1 .navbar{background:linear-gradient(110deg,#0b3c5d,#146c94)}
+  .r1 .navbar-logo{height:54px;width:auto;object-fit:contain;background:#fff;border-radius:.5rem;padding:3px 4px}
+  .r1 #nodeSel{width:190px}
+  @media (max-width:991.98px){ .r1 #nodeSel{width:100%} }
+  .r1 .card{border:0;border-radius:1rem;box-shadow:0 2px 14px rgba(15,50,80,.08)}
+  [data-bs-theme=dark] .r1 .card{box-shadow:none;border:1px solid var(--bs-border-color)}
+  .r1 .metric i{font-size:1.25rem;width:42px;height:42px;border-radius:12px;display:grid;place-items:center}
+  .r1 .gauge{position:relative;height:170px}
+  .r1 .gauge .mid{position:absolute;left:0;right:0;bottom:0;text-align:center}
+  .r1 .gauge .v{font-size:3.4rem;font-weight:800;line-height:1}
+  .r1 .chart-box{position:relative;height:280px}
+  .r1 .cat{font-weight:700;padding:.35rem .9rem;border-radius:2rem;color:#fff;display:inline-block}
+  .r1 .progress{height:6px}
+</style>
+</head>
+<body>
+<div class="r1" id="ring1-dashboard">
+
+<nav class="navbar navbar-expand-lg sticky-top navbar-dark shadow-sm">
+  <div class="container-xl">
+    <a class="navbar-brand d-flex align-items-center gap-2 me-auto py-1" href="#">
+      <img class="navbar-logo" src="itera.jpg" alt="Institut Teknologi Sumatera" width="50" height="60">
+      <span class="fw-bold"><i class="bi bi-wind me-2"></i>Pantau Udara <span class="opacity-75 fw-normal">Ring 1</span></span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navControls" aria-controls="navControls" aria-expanded="false" aria-label="Buka menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navControls">
+      <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 ms-lg-auto pt-3 pt-lg-0">
+        <select id="nodeSel" class="form-select form-select-sm" aria-label="Pilih titik pantau"></select>
+        <span id="status" class="badge align-self-start align-self-lg-center"></span>
+        <button type="button" id="themeBtn" class="btn btn-sm btn-outline-light align-self-start align-self-lg-center" title="Ganti tema" aria-label="Ganti tema"><i class="bi bi-moon-stars"></i></button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="container-xl py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-end mb-3">
+    <div><h1 class="h4 fw-bold mb-0" id="nodeName">–</h1><div class="text-body-secondary small" id="updated">Memuat data…</div></div>
+    <div id="msg" class="small"></div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-4">
+      <div class="card h-100"><div class="card-body text-center d-flex flex-column">
+        <div class="text-body-secondary fw-semibold mb-2">PM2.5 saat ini</div>
+        <div class="gauge"><canvas id="gauge"></canvas>
+          <div class="mid"><div class="v" id="pmVal">–</div><div class="text-body-secondary small">µg/m³</div></div></div>
+        <div class="mt-3"><span class="cat" id="pmCat">–</span></div>
+        <p class="small text-body-secondary mt-3 mb-0" id="pmAdvice"></p>
+      </div></div>
+    </div>
+    <div class="col-lg-8"><div class="row row-cols-2 row-cols-md-4 g-3" id="metrics"></div></div>
+
+    <div class="col-lg-8"><div class="card h-100"><div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h6 fw-bold mb-0">Tren debu (PM2.5 dan PM10)</h2>
+        <div class="btn-group btn-group-sm" id="rangeBtns">
+          <button class="btn btn-outline-primary" data-n="12">1 jam</button>
+          <button class="btn btn-outline-primary" data-n="72">6 jam</button>
+          <button class="btn btn-outline-primary active" data-n="288">24 jam</button>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="chPM"></canvas></div>
+    </div></div></div>
+    <div class="col-lg-4"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 fw-bold">Sebaran kategori (24 jam)</h2>
+      <div class="chart-box"><canvas id="chShare"></canvas></div>
+    </div></div></div>
+
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 fw-bold">Kebisingan (dB, perkiraan)</h2>
+      <div class="chart-box"><canvas id="chNoise"></canvas></div>
+    </div></div></div>
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 fw-bold">Suhu dan kelembapan</h2>
+      <div class="chart-box"><canvas id="chTH"></canvas></div>
+    </div></div></div>
+
+    <!-- Panel contoh: hanya tampil di mode data contoh -->
+    <div class="col-lg-7 demo-only"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 fw-bold">Laporan warga terbaru <span class="badge text-bg-secondary fw-normal">contoh</span></h2>
+      <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+        <thead><tr><th>Waktu</th><th>Titik</th><th>Keluhan</th><th>Tingkat</th></tr></thead><tbody id="reports"></tbody></table></div>
+    </div></div></div>
+    <div class="col-lg-5 demo-only"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 fw-bold">Peringatan terbaru <span class="badge text-bg-secondary fw-normal">contoh</span></h2>
+      <ul class="list-group list-group-flush" id="alerts"></ul>
+    </div></div></div>
+  </div>
+
+  <p class="text-body-secondary small mt-4 mb-0">Data berasal dari sensor berbiaya rendah dan bersifat indikatif. Kategori PM2.5 mengikuti rentang ISPU.</p>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// ================= KONFIGURASI =================
+const CONFIG = {
+  DB_URL: "https://NAMA-PROJECT-default-rtdb.asia-southeast1.firebasedatabase.app", // selama masih "NAMA-PROJECT" tampil data contoh
+  NODES: [
+    { id: "ring1-01", name: "Ring 1 – Titik 1" },
+    { id: "ring1-02", name: "Ring 1 – Titik 2" },
+    { id: "ring1-03", name: "Ring 1 – Titik 3" }
+  ],
+  POLL_MS: 30000, EXPECTED_MS: 300000, NOISE_LIMIT: 55
+};
+const DEMO = CONFIG.DB_URL.includes("NAMA-PROJECT");
+
+const LV = [
+  { n: "Baik", c: "#22a06b", max: 15.5, a: "Udara baik. Aman untuk beraktivitas di luar ruangan." },
+  { n: "Sedang", c: "#d9a400", max: 55.4, a: "Kelompok sangat sensitif sebaiknya mengurangi aktivitas berat di luar ruangan." },
+  { n: "Tidak sehat", c: "#f08a24", max: 150.4, a: "Kelompok sensitif sebaiknya mengurangi aktivitas luar ruangan dan memakai masker N95/KN95." },
+  { n: "Sangat tidak sehat", c: "#d64545", max: 250.4, a: "Hindari aktivitas di luar ruangan dan pakai masker N95/KN95 bila terpaksa keluar." },
+  { n: "Berbahaya", c: "#7b3fb0", max: Infinity, a: "Tetap di dalam ruangan dan tutup ventilasi dari luar." }
+];
+const lv = (v) => LV.findIndex((l) => v <= l.max);
+const $ = (id) => document.getElementById(id);
+const ok = (v) => typeof v === "number" && isFinite(v);
+const f = (v, d = 0) => (ok(v) ? v.toFixed(d) : "–");
+const hm = (t) => new Date(t).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+const dark = () => document.documentElement.getAttribute("data-bs-theme") === "dark";
+
+// ---------- data ----------
+function rng(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const cache = {};
+function fakeData(idx) {
+  if (cache[idx]) return cache[idx];
+  const r = rng(idx + 7), now = Date.now(), a = [];
+  for (let i = 287; i >= 0; i--) {
+    const t = now - i * 300000, d = new Date(t), h = d.getHours() + d.getMinutes() / 60;
+    const spike = idx === 2 && i > 20 && i < 60 ? 45 : 0;
+    const p = 12 + idx * 9 + 20 * Math.exp(-((h - 8) ** 2) / 6) + 28 * Math.exp(-((h - 18) ** 2) / 5) + spike + r() * 5;
+    const day = Math.max(0, Math.sin((h - 6) / 12 * Math.PI));
+    a.push({ ts: t, pm25: p, pm10: p * 1.5 + r() * 4, pm1: p * .62, temp: 26 + 7 * day + r(), hum: 92 - 28 * day + r() * 3,
+             noise: 46 + 14 * day + idx * 3 + r() * 6, gas: 880 + r() * 70 + (spike ? 260 : 0), batt: 3.72 + .42 * day });
+  }
+  return (cache[idx] = a);
+}
+async function load(idx) {
+  if (DEMO) return fakeData(idx);
+  const q = "?orderBy=" + encodeURIComponent('"$key"') + "&limitToLast=288";
+  const r = await fetch(`${CONFIG.DB_URL}/nodes/${CONFIG.NODES[idx].id}/readings.json${q}`);
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return Object.values((await r.json()) || {}).sort((a, b) => a.ts - b.ts);
+}
+
+// ---------- grafik ----------
+const charts = {};
+const line = (id, sets, extra = {}) => new Chart($(id), {
+  type: "line", data: { labels: [], datasets: sets },
+  options: { maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+    plugins: { legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8 } } },
+    scales: { x: { ticks: { maxTicksLimit: 7 }, grid: { display: false } }, ...extra } }
+});
+const ds = (label, color, o = {}) => ({ label, data: [], borderColor: color, backgroundColor: color + "22", tension: .35, pointRadius: 0, borderWidth: 2, ...o });
+function initCharts() {
+  charts.gauge = new Chart($("gauge"), { type: "doughnut",
+    data: { datasets: [{ data: [0, 1], backgroundColor: ["#22a06b", "#e6edf3"], borderWidth: 0 }] },
+    options: { rotation: -90, circumference: 180, cutout: "78%", maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } } });
+  charts.pm = line("chPM", [ds("PM2.5", "#146c94", { fill: true }), ds("PM10", "#e4572e", { borderDash: [5, 4] })]);
+  charts.share = new Chart($("chShare"), { type: "doughnut",
+    data: { labels: LV.map((l) => l.n), datasets: [{ data: [], backgroundColor: LV.map((l) => l.c), borderWidth: 0 }] },
+    options: { maintainAspectRatio: false, cutout: "62%", plugins: { legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8 } } } } });
+  charts.noise = line("chNoise", [ds("Kebisingan", "#7b3fb0", { fill: true }), ds("Batas " + CONFIG.NOISE_LIMIT + " dB", "#d64545", { borderDash: [6, 4], borderWidth: 1.5, backgroundColor: "transparent" })]);
+  charts.th = line("chTH", [ds("Suhu (°C)", "#e4572e", { yAxisID: "y" }), ds("Lembap (%)", "#2a7de1", { yAxisID: "y1" })],
+    { y: { position: "left" }, y1: { position: "right", grid: { drawOnChartArea: false } } });
+  themeCharts();
+}
+function themeCharts() {
+  Chart.defaults.color = dark() ? "#9fb3c8" : "#516173";
+  Chart.defaults.borderColor = dark() ? "#243447" : "#e4eaf0";
+  Chart.defaults.font.family = '"Plus Jakarta Sans", system-ui, sans-serif';
+  Object.values(charts).forEach((c) => c.update());
+}
+
+// ---------- tampilan ----------
+const state = { idx: 0, n: 288, d: [] };
+const card = (icon, color, title, val, unit, extra = "") =>
+  `<div class="col"><div class="card metric h-100"><div class="card-body">
+    <div class="d-flex align-items-center gap-2 mb-2"><i class="bi ${icon}" style="background:${color}1a;color:${color}"></i><span class="text-body-secondary small fw-semibold">${title}</span></div>
+    <div class="fs-3 fw-bold lh-1">${val}<small class="fs-6 fw-normal text-body-secondary ms-1">${unit}</small></div>${extra}</div></div></div>`;
+function trend(d, k, bad) {
+  const cur = d[d.length - 1][k], p = d[d.length - 13] && d[d.length - 13][k];
+  if (!ok(cur) || !ok(p) || p === 0) return "";
+  const pct = Math.round((cur - p) / p * 100);
+  if (Math.abs(pct) < 2) return `<div class="small text-body-secondary mt-2">stabil vs 1 jam lalu</div>`;
+  const up = pct > 0, cls = bad ? (up ? "text-danger" : "text-success") : "text-body-secondary";
+  return `<div class="small mt-2 ${cls}"><i class="bi bi-arrow-${up ? "up" : "down"}-short"></i>${Math.abs(pct)}% <span class="text-body-secondary">vs 1 jam lalu</span></div>`;
+}
+const bar = (pct, color) => `<div class="progress mt-2"><div class="progress-bar" style="width:${pct}%;background:${color}"></div></div>`;
+
+function render() {
+  const d = state.d, node = CONFIG.NODES[state.idx];
+  $("nodeName").textContent = node.name;
+  if (!d.length) { $("msg").textContent = "Belum ada data masuk."; return; }
+  $("msg").textContent = "";
+  const L = d[d.length - 1], lev = LV[ok(L.pm25) ? lv(L.pm25) : 0];
+
+  // status
+  const age = Date.now() - L.ts, s = $("status");
+  if (DEMO) { s.className = "badge text-bg-info"; s.textContent = "Mode contoh"; }
+  else if (age > CONFIG.EXPECTED_MS * 3) { s.className = "badge text-bg-danger"; s.textContent = "Offline"; }
+  else { s.className = "badge text-bg-success"; s.textContent = "Online"; }
+  $("updated").textContent = "Diperbarui " + new Date(L.ts).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
+
+  // gauge
+  const v = Math.min(L.pm25 || 0, 250);
+  charts.gauge.data.datasets[0].data = [v, 250 - v];
+  charts.gauge.data.datasets[0].backgroundColor = [lev.c, dark() ? "#243447" : "#e6edf3"];
+  charts.gauge.update();
+  $("pmVal").textContent = f(L.pm25); $("pmVal").style.color = lev.c;
+  $("pmCat").textContent = lev.n; $("pmCat").style.background = lev.c;
+  $("pmAdvice").textContent = lev.a;
+
+  // kartu metrik
+  const pct = Math.max(0, Math.min(100, ((L.batt - 3.3) / 0.9) * 100));
+  const day = d.filter((x) => x.ts > Date.now() - 86400e3).length;
+  $("metrics").innerHTML =
+    card("bi-cloud-haze2", "#146c94", "PM10", f(L.pm10), "µg/m³", trend(d, "pm10", true)) +
+    card("bi-circle", "#0e9aa7", "PM2.5", f(L.pm25), "µg/m³", trend(d, "pm25", true)) +
+    card("bi-thermometer-half", "#e4572e", "Suhu", f(L.temp, 1), "°C", trend(d, "temp")) +
+    card("bi-droplet-half", "#2a7de1", "Kelembapan", f(L.hum), "%", trend(d, "hum")) +
+    card("bi-volume-up", "#7b3fb0", "Kebisingan", f(L.noise), "dB", bar(Math.min(100, (L.noise || 0)), L.noise > CONFIG.NOISE_LIMIT ? "#d64545" : "#7b3fb0") +
+      `<div class="small mt-1 ${L.noise > CONFIG.NOISE_LIMIT ? "text-danger" : "text-body-secondary"}">${L.noise > CONFIG.NOISE_LIMIT ? "Di atas" : "Di bawah"} batas ${CONFIG.NOISE_LIMIT} dB</div>`) +
+    card("bi-wind", "#a0522d", "Indeks gas", f(L.gas), "relatif", trend(d, "gas", true)) +
+    card("bi-battery-half", "#22a06b", "Baterai", f(pct), "%", bar(pct, pct < 25 ? "#d64545" : "#22a06b") + `<div class="small text-body-secondary mt-1">${f(L.batt, 2)} V (perkiraan)</div>`) +
+    card("bi-activity", "#146c94", "Kelengkapan data", f(Math.min(100, day / 288 * 100)), "%", `<div class="small text-body-secondary mt-2">${day} pembacaan / 24 jam</div>`);
+
+  // grafik
+  const view = d.slice(-state.n), labels = view.map((x) => hm(x.ts));
+  const put = (c, ...series) => { c.data.labels = labels; series.forEach((s, i) => (c.data.datasets[i].data = s)); c.update(); };
+  put(charts.pm, view.map((x) => x.pm25), view.map((x) => x.pm10));
+  put(charts.noise, view.map((x) => x.noise), view.map(() => CONFIG.NOISE_LIMIT));
+  put(charts.th, view.map((x) => x.temp), view.map((x) => x.hum));
+  const pm = d.map((x) => x.pm25).filter(ok);
+  charts.share.data.datasets[0].data = LV.map((_, i) => pm.filter((x) => lv(x) === i).length);
+  charts.share.update();
+}
+
+async function refresh() {
+  try { state.d = await load(state.idx); render(); }
+  catch (e) { $("msg").innerHTML = `<span class="text-danger">Gagal memuat data: ${e.message}. Periksa DB_URL dan aturan Firebase.</span>`; }
+}
+
+// ---------- panel contoh ----------
+function demoPanels() {
+  const R = [["Sesak napas atau batuk", 3], ["Bau menyengat", 2], ["Mata atau tenggorokan perih", 2], ["Bising mengganggu", 1], ["Debu menumpuk di rumah", 2], ["Tidur terganggu", 1]];
+  const cls = { 1: "success", 2: "warning", 3: "danger" }, lab = { 1: "Ringan", 2: "Sedang", 3: "Berat" };
+  $("reports").innerHTML = R.map(([k, n], i) =>
+    `<tr><td class="text-nowrap">${hm(Date.now() - (i * 47 + 12) * 60000)}</td><td>${CONFIG.NODES[i % 3].name.replace("Ring 1 – ", "")}</td><td>${k}</td><td><span class="badge text-bg-${cls[n]}">${lab[n]}</span></td></tr>`).join("");
+  const A = [["bi-exclamation-triangle-fill text-warning", "PM2.5 naik ke Tidak sehat di Titik 3"], ["bi-check-circle-fill text-success", "PM2.5 membaik di Titik 3"],
+             ["bi-wifi-off text-danger", "Titik 2 tidak mengirim data"], ["bi-battery text-warning", "Baterai Titik 2 rendah"]];
+  $("alerts").innerHTML = A.map(([ic, t], i) =>
+    `<li class="list-group-item px-0 d-flex gap-2 align-items-start"><i class="bi ${ic}"></i><div><div class="small fw-semibold">${t}</div><div class="small text-body-secondary">${hm(Date.now() - (i * 95 + 25) * 60000)}</div></div></li>`).join("");
+}
+
+// ---------- inisialisasi ----------
+$("nodeSel").innerHTML = CONFIG.NODES.map((n, i) => `<option value="${i}">${n.name}</option>`).join("");
+$("nodeSel").onchange = (e) => { state.idx = +e.target.value; refresh(); };
+$("rangeBtns").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  [...$("rangeBtns").children].forEach((x) => x.classList.toggle("active", x === b));
+  state.n = +b.dataset.n; render();
+};
+$("themeBtn").onclick = () => {
+  const t = dark() ? "light" : "dark";
+  document.documentElement.setAttribute("data-bs-theme", t);
+  $("themeBtn").innerHTML = `<i class="bi bi-${t === "dark" ? "sun" : "moon-stars"}"></i>`;
+  themeCharts(); render();
+};
+if (matchMedia("(prefers-color-scheme: dark)").matches) { document.documentElement.setAttribute("data-bs-theme", "dark"); $("themeBtn").innerHTML = '<i class="bi bi-sun"></i>'; }
+if (DEMO) demoPanels(); else document.querySelectorAll(".demo-only").forEach((e) => e.remove());
+initCharts(); refresh(); setInterval(refresh, CONFIG.POLL_MS);
+</script>
+</body>
+</html>
