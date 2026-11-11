@@ -111,7 +111,7 @@
 <script>
 // ================= KONFIGURASI =================
 const CONFIG = {
-  DB_URL: "https://NAMA-PROJECT-default-rtdb.asia-southeast1.firebasedatabase.app", // selama masih "NAMA-PROJECT" tampil data contoh
+  DB_URL: "https://ringguard-fff63-default-rtdb.asia-southeast1.firebasedatabase.app", // data asli dari Realtime Database (ganti ke "NAMA-PROJECT" untuk mode contoh)
   NODES: [
     { id: "ring1-01", name: "Ring 1 – Titik 1" },
     { id: "ring1-02", name: "Ring 1 – Titik 2" },
@@ -257,6 +257,31 @@ async function refresh() {
   catch (e) { $("msg").innerHTML = `<span class="text-danger">Gagal memuat data: ${e.message}. Periksa DB_URL dan aturan Firebase.</span>`; }
 }
 
+// ---------- pembaruan otomatis (realtime via streaming Firebase) ----------
+let es = null, pollTimer = null;
+function applySnapshot(o) {
+  state.d = Object.values(o || {}).sort((a, b) => a.ts - b.ts);
+  render();
+}
+function startPolling() { // cadangan kalau streaming tidak didukung jaringan
+  if (!pollTimer) pollTimer = setInterval(refresh, CONFIG.POLL_MS);
+}
+function subscribe(idx) {
+  if (es) { es.close(); es = null; }
+  if (DEMO) return;
+  const q = "?orderBy=" + encodeURIComponent('"$key"') + "&limitToLast=288";
+  try {
+    es = new EventSource(`${CONFIG.DB_URL}/nodes/${CONFIG.NODES[idx].id}/readings.json${q}`);
+    es.addEventListener("put", (ev) => {
+      let m; try { m = JSON.parse(ev.data); } catch { return; }
+      if (m && m.path === "/") applySnapshot(m.data); // snapshot penuh saat mulai
+      else refresh(); // ada pembacaan baru: ambil ulang seri terbaru
+    });
+    es.addEventListener("patch", () => refresh());
+    es.onerror = () => { if (es) { es.close(); es = null; } startPolling(); };
+  } catch (e) { startPolling(); }
+}
+
 // ---------- panel contoh ----------
 function demoPanels() {
   const R = [["Sesak napas atau batuk", 3], ["Bau menyengat", 2], ["Mata atau tenggorokan perih", 2], ["Bising mengganggu", 1], ["Debu menumpuk di rumah", 2], ["Tidur terganggu", 1]];
@@ -271,7 +296,7 @@ function demoPanels() {
 
 // ---------- inisialisasi ----------
 $("nodeSel").innerHTML = CONFIG.NODES.map((n, i) => `<option value="${i}">${n.name}</option>`).join("");
-$("nodeSel").onchange = (e) => { state.idx = +e.target.value; refresh(); };
+$("nodeSel").onchange = (e) => { state.idx = +e.target.value; refresh(); subscribe(state.idx); };
 $("rangeBtns").onclick = (e) => {
   const b = e.target.closest("button"); if (!b) return;
   [...$("rangeBtns").children].forEach((x) => x.classList.toggle("active", x === b));
@@ -285,7 +310,7 @@ $("themeBtn").onclick = () => {
 };
 if (matchMedia("(prefers-color-scheme: dark)").matches) { document.documentElement.setAttribute("data-bs-theme", "dark"); $("themeBtn").innerHTML = '<i class="bi bi-sun"></i>'; }
 if (DEMO) demoPanels(); else document.querySelectorAll(".demo-only").forEach((e) => e.remove());
-initCharts(); refresh(); setInterval(refresh, CONFIG.POLL_MS);
+initCharts(); refresh(); subscribe(state.idx);
 </script>
 </body>
 </html>

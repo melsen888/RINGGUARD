@@ -130,9 +130,16 @@ Daftarkan titik di Realtime Database pada `config/nodes` sebelum mengirim data.
 
 ## 10. Dashboard
 
-Isi `CONFIG.DB_URL` di `dashboard.html` dengan URL Realtime Database project Anda, lalu buka file tersebut di browser. Selama masih berisi `NAMA-PROJECT`, dashboard menampilkan data contoh.
+Buka `dashboard.html` di browser. `CONFIG.DB_URL` sudah diarahkan ke Realtime Database, jadi yang tampil adalah data asli dan diperbarui **realtime** (streaming Firebase, tanpa perlu refresh). Ganti nilainya menjadi berisi `NAMA-PROJECT` bila ingin kembali ke data contoh.
 
-Untuk hosting online, jalankan `firebase init hosting` (public directory: `public`), pindahkan dashboard ke `public/index.html`, lalu `firebase deploy --only hosting`.
+Status di kanan atas: `Online` = ada pembacaan segar, `Offline` = alat/bot tidak mengirim data lebih dari 15 menit.
+
+Akses dari HP atau komputer lain:
+
+- **GitHub Pages**: buka `https://<username>.github.io/RINGGUARD/` (aktifkan lewat Settings → Pages → Deploy from a branch → `main` / root)
+- **Firebase Hosting**: jalankan `firebase init hosting` (public directory: `public`), pindahkan dashboard ke `public/index.html`, lalu `firebase deploy --only hosting`
+
+Catatan: hanya `nodes/*/readings` yang bisa dibaca publik, sehingga dashboard aman di-hosting.
 
 ## 11. Bot Telegram tanpa Blaze (mode lokal)
 
